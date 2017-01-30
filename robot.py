@@ -1,7 +1,7 @@
 # By DankMeme_Master101, Alex Rowell, with help from 2015 robot.py by Alex Rowell, Beniamino Briganti, Lucca Buonamano, Blake Mountford and Lex Martin
 import wpilib
 import math
-from rigs.controlstemplate import Controls
+import rigs.controlstemplate
 
 BACK_RIGHT = 0
 FRONT_RIGHT = 1
@@ -21,7 +21,7 @@ class Widge(wpilib.IterativeRobot):
         self.rightFront = self.mctype(FRONT_RIGHT)
         self.rightBack = self.mctype(BACK_RIGHT)
         self.logger.info("Defined FL, BL, FR, BR motors")
-        self.controls = Controls(wpilib.Joystick(JOYSTICK_PORT), self.isTest)
+        self.controls = rigs.controlstemplate.Controls(wpilib.Joystick(JOYSTICK_PORT), self.isTest)
         self.logger.info("Defined Control scheme")
         self.timer = wpilib.Timer()
         self.logger.info("Defined Timer")
@@ -67,12 +67,12 @@ class Widge(wpilib.IterativeRobot):
 
     def teleopPeriodic(self):
         self.controls.update()
-        self.arcade_drive(self.controls.forward(), self.controls.turn())
+        self.arcade_drive(self.controls.forward(), (self.controls.turn()))
 
         if self.controls.debug_button():
             self.print_debug_info()
 
-        '''try:
+        try:
             self.camera
             exp = self.camera.exposureValue
             if self.controls.exposure_up_button() and exp < 100:
@@ -80,7 +80,7 @@ class Widge(wpilib.IterativeRobot):
             if self.controls.exposure_down_button() and exp > 0:
                 self.camera.setExposureManual(exp - 10)
         except:
-            pass'''
+            pass
 
     def disabledPeriodic(self):
         self.leftFront.set(0)
@@ -90,8 +90,7 @@ class Widge(wpilib.IterativeRobot):
 
     def print_debug_info(self):
         self.logger.info("debug info here")
-
-    '''try:
+    try:
         # only if camera is configured
         self.camera
         self.logger.info("camera active: " + str(self.camera.active))
@@ -100,7 +99,7 @@ class Widge(wpilib.IterativeRobot):
         self.logger.info("camera fps: " + str(self.camera.fps))
         self.logger.info("camera res: " + str(self.camera.width) + "x" + str(self.camera.height))
     except:
-        pass'''
+        pass
 
     def testPeriodic(self):
         self.teleopPeriodic()
