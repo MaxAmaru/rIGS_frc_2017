@@ -1,16 +1,23 @@
 # By DankMeme_Master101, Alex Rowell, with help from 2015 robot.py by Alex Rowell, Beniamino Briganti, Lucca Buonamano, Blake Mountford and Lex Martin
 import wpilib
+#from networktables import NetworkTables
 import math
 import rigs.controlstemplate
 
+JOYSTICK_PORT = 0
 BACK_RIGHT = 0
 FRONT_RIGHT = 1
 BACK_LEFT = 2
 FRONT_LEFT = 3
-JOYSTICK_PORT = 0
+WINCH_MOTOR = 4
 
-class Widge(wpilib.IterativeRobot):
+class TupperBot(wpilib.IterativeRobot):
     def robotInit(self):
+        #NetworkTables.initialize(server='roborio-5893-frc.local')
+        #sd = NetworkTables.getTable('SmartDashboard')
+        #sd.putNumber('someNumber', 1234)
+        #test = sd.getNumber("someNumber")
+        #self.logger.info("Test = " + str(test))
         self.logger.info("Robot Starting up...")
         self.mctype = wpilib.Spark
         self.logger.info("Defined motor controller type")
@@ -20,13 +27,13 @@ class Widge(wpilib.IterativeRobot):
         self.leftBack = self.mctype(BACK_LEFT)
         self.rightFront = self.mctype(FRONT_RIGHT)
         self.rightBack = self.mctype(BACK_RIGHT)
+        self.winchMotor = wpilib.TalonSRX(WINCH_MOTOR)
         self.logger.info("Defined FL, BL, FR, BR motors")
         self.controls = rigs.controlstemplate.Controls(wpilib.Joystick(JOYSTICK_PORT), self.isTest)
         self.logger.info("Defined Control scheme")
         self.timer = wpilib.Timer()
         self.logger.info("Defined Timer")
         self.logger.info("Robot On")
-
     def disabledInit(self):
         self.logger.info('Disabled mode')
 
@@ -61,9 +68,15 @@ class Widge(wpilib.IterativeRobot):
     def autonomousPeriodic(self):
         self.logger.info("Autonomous Mode not implemented")
 
-
     def teleopInit(self):
         self.logger.info("Teleoperated Mode")
+
+    def winchActivate(self, speed):
+        self.winchMotor.setSpeed(speed)
+
+
+
+
 
     def teleopPeriodic(self):
         self.controls.update()
@@ -72,6 +85,13 @@ class Widge(wpilib.IterativeRobot):
         if self.controls.debug_button():
             self.print_debug_info()
 
+        if self.controls.climb_up():
+            self.winchActivate(1)
+        elif self.controls.climb_down():
+            self.winchActivate(-1)
+        else:
+            self.winchActivate(0)
+
         try:
             self.camera
             exp = self.camera.exposureValue
@@ -79,7 +99,7 @@ class Widge(wpilib.IterativeRobot):
                 self.camera.setExposureManual(exp + 10)
             if self.controls.exposure_down_button() and exp > 0:
                 self.camera.setExposureManual(exp - 10)
-        except:
+        except AttributeError:
             pass
 
     def disabledPeriodic(self):
@@ -90,20 +110,20 @@ class Widge(wpilib.IterativeRobot):
 
     def print_debug_info(self):
         self.logger.info("debug info here")
-    try:
-        # only if camera is configured
-        self.camera
-        self.logger.info("camera active: " + str(self.camera.active))
-        self.logger.info("camera name: " + str(self.camera.name))
-        self.logger.info("camera exposure: " + str(self.camera.exposureValue))
-        self.logger.info("camera fps: " + str(self.camera.fps))
-        self.logger.info("camera res: " + str(self.camera.width) + "x" + str(self.camera.height))
-    except:
-        pass
+        try:
+            # only if camera is configured
+            self.camera
+            self.logger.info("camera active: " + str(self.camera.active))
+            self.logger.info("camera name: " + str(self.camera.name))
+            self.logger.info("camera exposure: " + str(self.camera.exposureValue))
+            self.logger.info("camera fps: " + str(self.camera.fps))
+            self.logger.info("camera res: " + str(self.camera.width) + "x" + str(self.camera.height))
+
+        except AttributeError:
+            pass
 
     def testPeriodic(self):
         self.teleopPeriodic()
 
 if __name__ == '__main__':
-    wpilib.run(Widge)
-
+    wpilib.run(TupperBot)

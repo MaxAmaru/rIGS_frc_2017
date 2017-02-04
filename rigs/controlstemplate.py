@@ -94,8 +94,7 @@ class Controls(ControlsTemplate):
         return self.stick.getRawButton(self.MESSAGE_TEST)
 
     def forward(self):
-        return self.stick.getY() * (-1)
-        return self.stick.getY(old)
+        return -self.stick.getY()
 
     def turn(self):
         return self.stick.getZ()
