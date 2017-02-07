@@ -46,11 +46,7 @@ class Controls(ControlsTemplate):
     EXPOSURE_DOWN_BUTTON = 11
     TRIGGER = 1
     THUMB_BUTTON = 2
-
-    TOGGLE_LB = 3
-    TOGGLE_RB = 4
-    TOGGLE_LF = 5
-    TOGGLE_RF = 6
+    TOGGLE_DRIVE_BUTTON = 3
 
     logger = logging.getLogger('old_controls')
 
@@ -98,6 +94,7 @@ class Controls(ControlsTemplate):
 
     def turn(self):
         return self.stick.getZ()
+
 
     #def lift_portcullis(self):
      #   return self.stick.getRawButton(self.TRIGGER)

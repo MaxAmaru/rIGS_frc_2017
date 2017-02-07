@@ -2,13 +2,11 @@
 import wpilib
 #from networktables import NetworkTables
 import math
-import rigs.controlstemplate
+import rigs.testcontrols as controlstemplate
 
 JOYSTICK_PORT = 0
-BACK_RIGHT = 0
-FRONT_RIGHT = 1
-BACK_LEFT = 2
-FRONT_LEFT = 3
+LEFT_MOTOR = 1
+RIGHT_MOTOR = 3
 WINCH_MOTOR = 4
 
 class TupperBot(wpilib.IterativeRobot):
@@ -23,13 +21,11 @@ class TupperBot(wpilib.IterativeRobot):
         self.logger.info("Defined motor controller type")
         self.pdp = wpilib.PowerDistributionPanel()
         self.logger.info("defined PowerDistributionPanel")
-        self.leftFront = self.mctype(FRONT_LEFT)
-        self.leftBack = self.mctype(BACK_LEFT)
-        self.rightFront = self.mctype(FRONT_RIGHT)
-        self.rightBack = self.mctype(BACK_RIGHT)
-        self.winchMotor = wpilib.TalonSRX(WINCH_MOTOR)
+        self.left = self.mctype(LEFT_MOTOR)
+        self.right = self.mctype(RIGHT_MOTOR)
+        self.winchMotor = self.mctype(WINCH_MOTOR)
         self.logger.info("Defined FL, BL, FR, BR motors")
-        self.controls = rigs.controlstemplate.Controls(wpilib.Joystick(JOYSTICK_PORT), self.isTest)
+        self.controls = controlstemplate.Controls(wpilib.Joystick(JOYSTICK_PORT), self.isTest)
         self.logger.info("Defined Control scheme")
         self.timer = wpilib.Timer()
         self.logger.info("Defined Timer")
@@ -47,23 +43,28 @@ class TupperBot(wpilib.IterativeRobot):
         self.timer.start()
 
     def calculate_drive(self, forward, turn):
-        left_value = -forward + turn
-        left_value *= math.fabs(left_value)
-        multiplier = self.controls.get_throttle_multiplier()
-        left_value *= multiplier
-        right_value = -forward - turn
-        right_value *= math.fabs(right_value)
-        right_value *= multiplier
-        return left_value, -right_value  # TODO invert the right side at the controller config level
+        #left_value = -forward + turn
+        #left_value *= math.fabs(left_value)
+        #multiplier = self.controls.get_throttle_multiplier()
+        #left_value *= multiplier
+        #right_value = -forward - turn
+        #right_value *= math.fabs(right_value)
+        #right_value *= multiplier
+
+        left_value = turn + forward * -1
+        right_value = turn + forward
+
+
+        return left_value, right_value  # TODO invert the right side at the controller config level
 
     def arcade_drive(self, forward, turn):
         left_value, right_value = self.calculate_drive(forward, turn)
 
         # in test mode, if the motor toggle for a wheel is disabled, we keep it set to 0
-        self.leftFront.set(left_value if self.controls.lf_toggle or not self.isTest() else 0)
-        self.leftBack.set(left_value if self.controls.lb_toggle or not self.isTest() else 0)
-        self.rightFront.set(right_value if self.controls.rf_toggle or not self.isTest() else 0)
-        self.rightBack.set(right_value if self.controls.rb_toggle or not self.isTest() else 0)
+        self.left.set(left_value if self.controls.lf_toggle or not self.isTest() else 0)
+
+        self.right.set(right_value if self.controls.rf_toggle or not self.isTest() else 0)
+
 
     def autonomousPeriodic(self):
         self.logger.info("Autonomous Mode not implemented")
@@ -86,9 +87,9 @@ class TupperBot(wpilib.IterativeRobot):
             self.print_debug_info()
 
         if self.controls.climb_up():
-            self.winchActivate(1)
+            self.winchMotor.set(1)
         elif self.controls.climb_down():
-            self.winchActivate(-1)
+            self.winchMotor.set(-1)
         else:
             self.winchActivate(0)
 
@@ -103,10 +104,8 @@ class TupperBot(wpilib.IterativeRobot):
             pass
 
     def disabledPeriodic(self):
-        self.leftFront.set(0)
-        self.leftBack.set(0)
-        self.rightFront.set(0)
-        self.rightBack.set(0)
+        self.right.set(0)
+        self.left.set(0)
 
     def print_debug_info(self):
         self.logger.info("debug info here")
