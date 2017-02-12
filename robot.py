@@ -1,8 +1,8 @@
 # By DankMeme_Master101, Alex Rowell, with help from 2015 robot.py by Alex Rowell, Beniamino Briganti, Lucca Buonamano, Blake Mountford and Lex Martin
 import wpilib
-#from networktables import NetworkTables
+from networktables import NetworkTables
 import math
-import rigs.testcontrols as controlstemplate
+import rigs.controlstemplate as controlstemplate
 
 JOYSTICK_PORT = 0
 LEFT_MOTOR = 1
@@ -11,14 +11,23 @@ WINCH_MOTOR = 4
 
 class TupperBot(wpilib.IterativeRobot):
     def robotInit(self):
-        #NetworkTables.initialize(server='roborio-5893-frc.local')
+
         #sd = NetworkTables.getTable('SmartDashboard')
         #sd.putNumber('someNumber', 1234)
         #test = sd.getNumber("someNumber")
         #self.logger.info("Test = " + str(test))
         self.logger.info("Robot Starting up...")
+        self.logger.info("Camera started")
         self.mctype = wpilib.Spark
         self.logger.info("Defined motor controller type")
+        self.cam_horizontal = wpilib.Servo(6)
+        self.cam_vertical = wpilib.Servo(7)
+        self.cam_vertical_value = 0.2
+        self.cam_horizontal_value = 0.5
+        self.logger.info("Defined Camera Servos and Respective Values")
+        self.cam_horizontal.set(self.cam_horizontal_value)
+        self.cam_vertical.set(self.cam_vertical_value)
+        self.logger.info("Set Camera Servos to Halfway")
         self.pdp = wpilib.PowerDistributionPanel()
         self.logger.info("defined PowerDistributionPanel")
         self.left = self.mctype(LEFT_MOTOR)
@@ -82,26 +91,38 @@ class TupperBot(wpilib.IterativeRobot):
     def teleopPeriodic(self):
         self.controls.update()
         self.arcade_drive(self.controls.forward(), (self.controls.turn()))
-
+        if self.controls.reset_cam():
+            self.cam_horizontal_value = 0.5
+            self.cam_vertical_value = 0.2
         if self.controls.debug_button():
             self.print_debug_info()
-
         if self.controls.climb_up():
             self.winchMotor.set(1)
         elif self.controls.climb_down():
             self.winchMotor.set(-1)
         else:
             self.winchActivate(0)
+        if self.controls.move_cam_up():
+            self.cam_vertical_value -= 0.001
+        elif self.controls.move_cam_down():
+            self.cam_vertical_value += 0.001
+        elif self.controls.move_cam_left():
+            self.cam_horizontal_value += 0.001
+        elif self.controls.move_cam_right():
+            self.cam_horizontal_value -= 0.001
+        self.cam_horizontal.set(self.cam_horizontal_value)
+        self.cam_vertical.set(self.cam_vertical_value)
 
-        try:
-            self.camera
-            exp = self.camera.exposureValue
-            if self.controls.exposure_up_button() and exp < 100:
-                self.camera.setExposureManual(exp + 10)
-            if self.controls.exposure_down_button() and exp > 0:
-                self.camera.setExposureManual(exp - 10)
-        except AttributeError:
-            pass
+
+       # try:
+       #     self.camera
+       #     exp = self.camera.exposureValue
+       #     if self.controls.exposure_up_button() and exp < 100:
+       #         self.camera.setExposureManual(exp + 10)
+       #     if self.controls.exposure_down_button() and exp > 0:
+       #         self.camera.setExposureManual(exp - 10)
+       # except AttributeError:
+       #     print("")
 
     def disabledPeriodic(self):
         self.right.set(0)
