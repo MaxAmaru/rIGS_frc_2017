@@ -3,17 +3,21 @@ import wpilib
 from networktables import NetworkTables
 import math
 import rigs.controlstemplate as controlstemplate
+from enum import Enum
 
 JOYSTICK_PORT = 0
 LEFT_MOTOR = 1
 RIGHT_MOTOR = 3
 WINCH_MOTOR = 4
-
+distOneSecond = 2
 class TupperBot(wpilib.IterativeRobot):
     def robotInit(self):
 
-        #sd = NetworkTables.getTable('SmartDashboard')
-        #sd.putNumber('someNumber', 1234)
+        self.pegChooser = wpilib.SendableChooser()
+        self.pegChooser.addObject('Left', 'left')
+        self.pegChooser.addObject('Right', 'right')
+        self.pegChooser.addObject('Middle', 'middle')
+        wpilib.SmartDashboard.putData('ChooseYourPeg', self.pegChooser)
         #test = sd.getNumber("someNumber")
         #self.logger.info("Test = " + str(test))
         self.logger.info("Robot Starting up...")
@@ -47,6 +51,9 @@ class TupperBot(wpilib.IterativeRobot):
 
     def autonomousInit(self):
         self.logger.info("Autonomous Mode")
+        self.pegDriveState = "start"
+        self.peg = self.pegChooser.getSelected()
+
         # resets and starts the timer at the beginning of autonomous
         self.timer.reset()
         self.timer.start()
@@ -68,15 +75,57 @@ class TupperBot(wpilib.IterativeRobot):
 
     def arcade_drive(self, forward, turn):
         left_value, right_value = self.calculate_drive(forward, turn)
-
         # in test mode, if the motor toggle for a wheel is disabled, we keep it set to 0
         self.left.set(left_value if self.controls.lf_toggle or not self.isTest() else 0)
-
         self.right.set(right_value if self.controls.rf_toggle or not self.isTest() else 0)
+
+    def autonomous_middle_peg(self):
+        distToPeg = 1.8288
+        if self.timer.get() < distToPeg / distOneSecond:
+            self.arcade_drive(1, 0)
+        else:
+            self.arcade_drive(0, 0)
+
+
+    def autonomous_turn(self):
+
+        if self.peg == "right":
+            turnValue = 1
+        else:
+            turnValue = -1
+        distPastAirship = 1
+        distIntoAirship = 1
+        timeToTurn = 1
+        if self.pegDriveState == "forwardPastAirship":
+            if self.timer.get() < distPastAirship / distOneSecond:
+                self.arcade_drive(1, 0)
+            else:
+                self.arcade_drive(0, 0)
+                self.pegDriveState = "turn"
+                self.timer.reset()
+        if self.pegDriveState == "turn":
+            if (self.timer.get() < timeToTurn):
+                self.arcade_drive(0, turnValue)
+            else:
+                self.arcade_drive(0, 0)
+                self.timer.reset()
+        if self.pegDriveState == 'forwardIntoAirship':
+            if self.timer.get() < distIntoAirship / distOneSecond:
+                self.arcade_drive(1, 0)
+            else:
+                self.arcade_drive(0, 0)
+
+
+
+
 
 
     def autonomousPeriodic(self):
-        self.logger.info("Autonomous Mode not implemented")
+        if (self.peg == "middle"):
+            self.autonomous_middle_peg()
+        elif (self.peg=="right" or self.peg=="left"):
+            self.autonomous_turn()
+
 
     def teleopInit(self):
         self.logger.info("Teleoperated Mode")
@@ -93,7 +142,7 @@ class TupperBot(wpilib.IterativeRobot):
         self.arcade_drive(self.controls.forward(), (self.controls.turn()))
         if self.controls.reset_cam():
             self.cam_horizontal_value = 0.5
-            self.cam_vertical_value = 0.2
+            self.cam_vertical_value = 0.1
         if self.controls.debug_button():
             self.print_debug_info()
         if self.controls.climb_up():

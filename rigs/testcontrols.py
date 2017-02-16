@@ -48,7 +48,8 @@ class Controls(ControlsTemplate):
     TOGGLE_DRIVE_BUTTON = 3
     MOVE_CAMERA_LEFT = 9
     MOVE_CAMERA_RIGHT = 10
-    MOVE_CAMERA_UP = 8
+    MOVE_CAMERA_VERTICAL = 4
+    MOVE_CAMERA_HORIZONTAL = 5
     MOVE_CAMERA_DOWN = 12
     logger = logging.getLogger('old_controls')
 
@@ -98,17 +99,17 @@ class Controls(ControlsTemplate):
     def turn(self):
         return self.stick.getZ()
     def move_cam_up(self):
-        return self.stick.getRawButton(self.MOVE_CAMERA_UP)
+        return self.stick.getRawAxis(self.MOVE_CAMERA_VERTICAL) > 0
     def move_cam_down(self):
-        return self.stick.getRawButton(self.MOVE_CAMERA_DOWN)
+        return self.stick.getRawAxis(self.MOVE_CAMERA_VERTICAL) < 0
     def reset_cam(self):
         return self.stick.getRawButton(11)
     def test(self):
         return 1
     def move_cam_left(self):
-        return self.stick.getRawButton(self.MOVE_CAMERA_LEFT)
+        return self.stick.getRawAxis(self.MOVE_CAMERA_HORIZONTAL) > 0
     def move_cam_right(self):
-        return self.stick.getRawButton(self.MOVE_CAMERA_RIGHT)
+        return self.stick.getRawAxis(self.MOVE_CAMERA_HORIZONTAL) < 0
     def climb_up(self):
         return self.stick.getRawButton(self.TRIGGER)
     def climb_down(self):
